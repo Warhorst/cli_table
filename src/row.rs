@@ -5,12 +5,18 @@ pub trait ToRow<const C: usize> {
 }
 
 pub struct Row<const C: usize> {
-    values: [String; C],
+    values: Vec<String>,
 }
 
 impl<const C: usize> Row<C> {
-    pub fn new(values: [String; C]) -> Self {
-        Row { values }
+    pub fn from_array(values: [String; C]) -> Self {
+        Row { values: values.into_iter().cloned().collect() }
+    }
+
+    pub fn from_vec(values: Vec<String>) -> Self {
+        if values.len() != C { panic!("Wrong number of values for row provided! Expected {}, got {}", C, values.len()) }
+
+        Row {values}
     }
 
     pub fn to_cells(self) -> RowCells {
@@ -24,7 +30,7 @@ pub struct RowCells {
 }
 
 impl RowCells {
-    fn from_row<const C: usize>(row: [String; C]) -> Self {
+    fn from_row(row: Vec<String>) -> Self {
         let cells: Vec<Cell> = row.into_iter().map(Cell::from_string).collect();
         let max_dimension = cells.iter()
             .map(|cell| cell.dimension)
@@ -46,7 +52,7 @@ pub struct Cell {
 }
 
 impl Cell {
-    pub fn from_string(string: &String) -> Self {
+    pub fn from_string(string: String) -> Self {
         let data: Vec<String> = string.lines().map(String::from).collect();
         let width = data.iter().map(String::len).max().unwrap_or_default();
         let height = data.len();

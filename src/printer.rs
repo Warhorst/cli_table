@@ -1,13 +1,11 @@
-use crate::row::{ToRow, Row, RowCells, Dimension};
+use crate::row::{Dimension, Row, RowCells, ToRow};
 
 pub struct Printer;
 
 impl Printer {
-    pub fn print<'a, R, I, const C: usize>(&self, data: I)
-        where R: 'a + ToRow<C>,
-              I: IntoIterator<Item=&'a R> {
+    pub fn print<I, const C: usize>(&self, data: I)
+        where I: IntoIterator<Item=Row<C>> {
         let row_cells: Vec<RowCells> = data.into_iter()
-            .map(ToRow::to_table_row)
             .map(Row::to_cells)
             .collect();
 
@@ -65,7 +63,7 @@ impl Printer {
             if i == 0 { line.push_str("*") };
             line.push_str(" ");
             line.push_str(val.as_str());
-            (0..whitespace).into_iter().for_each(|_| line.push_str(" "));
+            for _ in 0..whitespace { line.push_str(" ") }
             line.push_str(" ");
             line.push_str("*");
         }
