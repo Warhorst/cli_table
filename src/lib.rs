@@ -1,3 +1,7 @@
+mod table;
+mod row;
+mod printer;
+
 #[cfg(test)]
 mod tests {
     #[test]
