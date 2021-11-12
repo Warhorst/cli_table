@@ -50,13 +50,7 @@ mod tests {
     use crate::table::Table;
 
     #[test]
-    fn foo() {
-        // amazing!
-        let table = Table::new().add_header(["foo", "bar", "baz"]);
-    }
-
-    #[test]
-    fn bar() {
+    fn print_works() {
         struct Bar {
             val: usize,
             name: String,

@@ -1,4 +1,4 @@
-use crate::row::{Dimension, Row, RowCells, ToRow};
+use crate::row::{Dimension, Row, RowCells};
 
 pub struct Printer;
 
@@ -6,7 +6,7 @@ impl Printer {
     pub fn print<I, const C: usize>(&self, data: I)
         where I: IntoIterator<Item=Row<C>> {
         let row_cells: Vec<RowCells> = data.into_iter()
-            .map(Row::to_cells)
+            .map(RowCells::from)
             .collect();
 
         let max_dimension = row_cells.iter()
@@ -35,7 +35,7 @@ impl Printer {
             match i {
                 i if i == 0 || i == printed_row_dimension.height - 1 => Self::print_full_line(printed_row_dimension.width),
                 i if i == 1 || i == printed_row_dimension.height - 2 => Self::print_blank_line(printed_row_dimension.width, cell_width),
-                i => Self::print_cell_values(row_cells.next_values(), cell_width)
+                _ => Self::print_cell_values(row_cells.next_values(), cell_width)
             }
         }
     }

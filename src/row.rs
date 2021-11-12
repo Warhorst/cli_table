@@ -18,10 +18,6 @@ impl<const C: usize> Row<C> {
 
         Row {values}
     }
-
-    pub fn to_cells(self) -> RowCells {
-        RowCells::from_row(self.values)
-    }
 }
 
 pub struct RowCells {
@@ -30,19 +26,21 @@ pub struct RowCells {
 }
 
 impl RowCells {
-    fn from_row(row: Vec<String>) -> Self {
-        let cells: Vec<Cell> = row.into_iter().map(Cell::from_string).collect();
+    pub fn next_values(&mut self) -> Vec<String> {
+        self.cells.iter_mut()
+            .map(Cell::next_value)
+            .collect()
+    }
+}
+
+impl<const C: usize> From<Row<C>> for RowCells {
+    fn from(row: Row<C>) -> Self {
+        let cells: Vec<Cell> = row.values.into_iter().map(Cell::from_string).collect();
         let max_dimension = cells.iter()
             .map(|cell| cell.dimension)
             .fold(Dimension::default(), Dimension::max_merge);
 
         RowCells { cells, max_dimension }
-    }
-
-    pub fn next_values(&mut self) -> Vec<String> {
-        self.cells.iter_mut()
-            .map(Cell::next_value)
-            .collect()
     }
 }
 
