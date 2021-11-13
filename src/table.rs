@@ -27,7 +27,7 @@ impl<const C: usize> Table<C> {
             .into_iter()
             .chain(data.into_iter().map(ToRow::to_table_row));
 
-        Printer.print(rows)
+        Printer.print(TableCells::from_rows(rows))
     }
 }
 
@@ -58,6 +58,6 @@ mod tests {
 
         Table::new()
             .header(["The value\nof interest", "My name", "A complex number"])
-            .print_data(&vec![Foo::new(2, "foo", 3.2), Foo::new(42, "be", 4.5321)])
+            .print_data(&vec![Foo::new(2, "foo", 3.2), Foo::new(42, "bar", 4.5321)])
     }
 }
