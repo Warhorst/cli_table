@@ -1,10 +1,15 @@
-use crate::row::{Dimension, Row, RowCells};
+use crate::cells::{Dimension, RowCells, TableCells};
+use crate::row::Row;
 
 pub struct Printer<const C: usize>;
 
 impl<const C: usize> Printer<C> {
+    pub fn print_tc(&self, table_cells: TableCells<C>) {
+
+    }
+
     pub fn print<I: IntoIterator<Item=Row<C>>>(&self, data: I) {
-        let row_cells: Vec<RowCells> = data.into_iter()
+        let row_cells: Vec<RowCells<C>> = data.into_iter()
             .map(RowCells::from)
             .collect();
 
@@ -15,7 +20,7 @@ impl<const C: usize> Printer<C> {
         self.print_cells(row_cells, max_dimension)
     }
 
-    fn print_cells(&self, row_cells: Vec<RowCells>, max_cell_dimension: Dimension) {
+    fn print_cells(&self, row_cells: Vec<RowCells<C>>, max_cell_dimension: Dimension) {
         let printed_row_dimension = Self::calculate_printed_row_dimension(max_cell_dimension);
 
         Self::print_full_line(printed_row_dimension.width);
@@ -30,7 +35,7 @@ impl<const C: usize> Printer<C> {
         Dimension { width, height }
     }
 
-    fn print_row(mut row_cells: RowCells, printed_row_dimension: Dimension, cell_width: usize) {
+    fn print_row(mut row_cells: RowCells<C>, printed_row_dimension: Dimension, cell_width: usize) {
         for i in 0..printed_row_dimension.height {
             match i {
                 i if i == 0 => (),

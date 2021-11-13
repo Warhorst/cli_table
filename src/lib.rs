@@ -1,6 +1,8 @@
 mod table;
 mod row;
 mod printer;
+mod header;
+mod cells;
 
 #[cfg(test)]
 mod tests {
