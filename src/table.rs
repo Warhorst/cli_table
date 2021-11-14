@@ -27,7 +27,7 @@ impl<const C: usize> Table<C> {
             .into_iter()
             .chain(data.into_iter().map(ToRow::to_table_row));
 
-        Printer.print(TableCells::from_rows(rows))
+        Printer::new(TableCells::from_rows(rows)).print()
     }
 }
 
