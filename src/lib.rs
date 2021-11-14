@@ -1,5 +1,5 @@
-mod table;
-mod row;
+pub mod table;
+pub mod row;
 mod printer;
 mod header;
 mod cells;
