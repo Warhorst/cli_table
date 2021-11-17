@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use crate::cells::TableCells;
 use crate::header::Header;
 use crate::printer::Printer;
@@ -22,42 +24,18 @@ impl<const C: usize> Table<C> {
     pub fn print_data<'a, R, I>(&self, data: I)
         where R: 'a + ToRow<C>,
               I: IntoIterator<Item=&'a R> {
+        self.print_data_to(data, std::io::stdout().lock())
+    }
+
+    pub fn print_data_to<'a, R, I, W>(&self, data: I, target: W)
+        where R: 'a + ToRow<C>,
+              I: IntoIterator<Item=&'a R>,
+              W: Write {
         let rows = self.header.as_ref()
             .map(ToRow::to_table_row)
             .into_iter()
             .chain(data.into_iter().map(ToRow::to_table_row));
 
-        Printer::new(TableCells::from_rows(rows)).print()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::row::{Row, ToRow};
-    use crate::table::Table;
-
-    #[test]
-    fn print_works() {
-        struct Foo {
-            val: usize,
-            name: String,
-            complex: f32
-        }
-
-        impl Foo {
-            fn new(val: usize, name: &'static str, complex: f32) -> Self {
-                Foo {val, name: name.to_string(), complex}
-            }
-        }
-
-        impl ToRow<3> for Foo {
-            fn to_table_row(&self) -> Row<3> {
-                Row::from([self.val.to_string(), self.name.clone(), self.complex.to_string()])
-            }
-        }
-
-        Table::new()
-            .header(["The value\nof interest", "My name", "A complex number"])
-            .print_data(&vec![Foo::new(2, "foo", 3.2), Foo::new(42, "bar", 4.5321)])
+        Printer::new(TableCells::from_rows(rows)).print_to(target)
     }
 }

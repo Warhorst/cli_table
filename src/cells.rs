@@ -24,7 +24,7 @@ impl<const C: usize> TableCells<C> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RowCells<const C: usize> {
     pub max_dimension: Dimension,
     pub cells: [Cell; C],
@@ -54,7 +54,7 @@ impl<const C: usize> From<Row<C>> for RowCells<C> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Cell {
     pub data: Vec<String>,
     pub dimension: Dimension,

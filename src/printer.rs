@@ -1,8 +1,10 @@
+use std::io::Write;
+
 use crate::cells::{Dimension, RowCells, TableCells};
 
 pub struct Printer<const C: usize> {
     table_cells: TableCells<C>,
-    printed_row_dimension: Dimension,
+    printed_row_dimension: Dimension
 }
 
 impl<const C: usize> Printer<C> {
@@ -12,11 +14,11 @@ impl<const C: usize> Printer<C> {
         Printer { printed_row_dimension, table_cells }
     }
 
-    pub fn print(&self) {
-        self.print_full_line();
+    pub fn print_to<W: Write>(&self, mut target: W) {
+        Self::write_line(self.create_full_line(), &mut target);
 
         for rc in &self.table_cells.row_cells {
-            self.print_row(rc)
+            self.print_row(rc, &mut target)
         }
     }
 
@@ -26,36 +28,41 @@ impl<const C: usize> Printer<C> {
         Dimension { width, height }
     }
 
-    fn print_row(&self, row_cells: &RowCells<C>) {
+    fn print_row<W: Write>(&self, row_cells: &RowCells<C>, target: &mut W) {
         let mut current_line = 0;
 
         for i in 0..self.printed_row_dimension.height {
-            match i {
-                i if i == 0 => (),
-                i if i == self.printed_row_dimension.height - 1 => self.print_full_line(),
-                i if i == 1 || i == self.printed_row_dimension.height - 2 => self.print_blank_line(),
+            let line_to_write = match i {
+                i if i == 0 => continue,
+                i if i == self.printed_row_dimension.height - 1 => self.create_full_line(),
+                i if i == 1 || i == self.printed_row_dimension.height - 2 => self.create_blank_line(),
                 _ => {
-                    self.print_cell_values(row_cells.get_line_values(current_line));
-                    current_line += 1
+                    let line = self.create_cell_values_line(row_cells.get_line_values(current_line));
+                    current_line += 1;
+                    line
                 }
-            }
+            };
+
+            Self::write_line(line_to_write, target)
         }
     }
 
-    fn print_full_line(&self) {
+    fn create_full_line(&self) -> String {
         let row_width = self.printed_row_dimension.width;
         let cell_width = self.table_cells.cell_dimension.width;
 
-        println!("{}", (0..row_width).into_iter()
+        let line = (0..row_width).into_iter()
             .map(|i| match i {
                 0 => "+",
                 i if i % (cell_width + 3) == 0 => "+",
                 _ => "-"
             })
-            .collect::<String>())
+            .collect::<String>();
+
+        line
     }
 
-    fn print_blank_line(&self) {
+    fn create_blank_line(&self) -> String {
         let row_width = self.printed_row_dimension.width;
         let cell_width = self.table_cells.cell_dimension.width;
 
@@ -65,10 +72,11 @@ impl<const C: usize> Printer<C> {
                 i if i % (cell_width + 3) == 0 => "|",
                 _ => " "
             }).collect::<String>();
-        println!("{}", line)
+
+        line
     }
 
-    fn print_cell_values(&self, cell_values: Vec<String>) {
+    fn create_cell_values_line(&self, cell_values: Vec<String>) -> String {
         let cell_width = self.table_cells.cell_dimension.width;
         let mut line = String::new();
 
@@ -83,6 +91,11 @@ impl<const C: usize> Printer<C> {
             line.push_str("|");
         }
 
-        println!("{}", line)
+        line
+    }
+
+    fn write_line<W: Write>(mut line: String, target: &mut W) {
+        line.push_str("\n");
+        target.write_all(line.as_bytes()).unwrap()
     }
 }
