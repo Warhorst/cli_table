@@ -15,10 +15,8 @@ impl<const C: usize> Printer<C> {
     }
 
     pub fn print_to<W: Write>(&self, mut target: W) {
-        Self::write_line(self.create_full_line(), &mut target);
-
-        for rc in &self.table_cells.row_cells {
-            self.print_row(rc, &mut target)
+        for (i, rc) in self.table_cells.row_cells.iter().enumerate() {
+            self.print_row(i, rc, &mut target)
         }
     }
 
@@ -28,11 +26,12 @@ impl<const C: usize> Printer<C> {
         Dimension { width, height }
     }
 
-    fn print_row<W: Write>(&self, row_cells: &RowCells<C>, target: &mut W) {
+    fn print_row<W: Write>(&self, row_index: usize, row_cells: &RowCells<C>, target: &mut W) {
         let mut current_line = 0;
 
         for i in 0..self.printed_row_dimension.height {
             let line_to_write = match i {
+                i if i == 0 && row_index == 0 => self.create_full_line(),
                 i if i == 0 => continue,
                 i if i == self.printed_row_dimension.height - 1 => self.create_full_line(),
                 i if i == 1 || i == self.printed_row_dimension.height - 2 => self.create_blank_line(),
