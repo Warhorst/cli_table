@@ -32,14 +32,13 @@ impl<Row, RowMapper: Fn(Row) -> [String; Columns], const Columns: usize> Table<R
 
     pub fn print<I>(self, values: I) where I: IntoIterator<Item=Row> {
         let mut rows: Vec<[String; Columns]> = self.header.into_iter()
-            .map(|h| h.into_iter()
+            .map(|h| h.iter()
                 .map(|s| s.to_string())
                 .collect::<Vec<_>>()
                 .try_into()
                 .unwrap())
+            .chain(values.into_iter().map(self.row_mapper))
             .collect();
-
-        rows.extend(values.into_iter().map(self.row_mapper))
 
         // actual printing
     }
