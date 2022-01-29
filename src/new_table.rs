@@ -2,6 +2,7 @@ use std::convert::TryInto;
 use std::marker::PhantomData;
 
 use crate::new_table::Width::Dynamic;
+use crate::table_writer::TableWriter;
 
 pub struct Table<Row, RowMapper: Fn(Row) -> [String; Columns], const Columns: usize> {
     header: Option<[&'static str; Columns]>,
@@ -40,7 +41,8 @@ impl<Row, RowMapper: Fn(Row) -> [String; Columns], const Columns: usize> Table<R
             .chain(values.into_iter().map(self.row_mapper))
             .collect();
 
-        // actual printing
+        let writer = TableWriter::new(self.column_widths.unwrap_or([Width::Dynamic; Columns]));
+        writer.write(rows, std::io::stdout().lock())
     }
 }
 
@@ -52,26 +54,21 @@ pub enum Width {
 
 #[cfg(test)]
 mod tests {
-    use crate::new_table::Table;
+    use crate::new_table::{Table, Width};
+    use crate::new_table::Width::Max;
 
     #[test]
     fn table_creation_works() {
-        let strings = ["foo", "bar", "baz"];
+        let strings = ["föööö0000 oooooooo00 oooooooo00", "baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaar", "baz"];
 
         Table::new(
             |s: &str| [
                 s.to_string(),
                 s.to_string()
             ]
-        ).header(["h1", "h2"]).print(strings);
-
-        let nums = [1, 2, 3];
-
-        Table::new(
-            |num: i32| [
-                num.to_string(),
-                num.to_string(),
-            ]
-        ).header(["foo", "bar"]).print(nums);
+        )
+            .header(["h1", "h2"])
+            .column_widths([Width::Max(8), Width::Dynamic])
+            .print(strings);
     }
 }
