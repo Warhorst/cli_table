@@ -26,12 +26,9 @@ impl<const C: usize> TableWriter<C> {
                 acc
             });
 
-        let mut lines = vec![];
-        lines.push(Line::Full);
-
-        rows.into_iter()
-            .flat_map(|row| self.row_to_lines(row, widths))
-            .for_each(|line| lines.push(line));
+        let lines = Some(Line::Full).into_iter()
+            .chain(rows.into_iter().flat_map(|row| self.row_to_lines(row, widths)))
+            .collect();
 
         target.write(self.write_lines(lines, widths).as_bytes()).unwrap();
     }
