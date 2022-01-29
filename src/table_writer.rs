@@ -12,7 +12,7 @@ impl<const C: usize> TableWriter<C> {
         TableWriter { column_widths }
     }
 
-    pub fn write<Target: Write>(self, rows: Vec<[String; C]>, mut target: Target) {
+    pub fn write<T: Write>(self, rows: Vec<[String; C]>, target: T) {
         let widths = rows.iter()
             .fold([0; C], |mut acc, row| {
                 for i in 0..C {
@@ -30,7 +30,7 @@ impl<const C: usize> TableWriter<C> {
             .chain(rows.into_iter().flat_map(|row| self.row_to_lines(row, widths)))
             .collect();
 
-        target.write(self.write_lines(lines, widths).as_bytes()).unwrap();
+        self.write_lines(lines, widths, target)
     }
 
     fn row_to_lines(&self, row: [String; C], widths: [usize; C]) -> Vec<Line<C>> {
@@ -103,8 +103,10 @@ impl<const C: usize> TableWriter<C> {
             }).0
     }
 
-    fn write_lines(mut self, lines: Vec<Line<C>>, widths: [usize; C]) -> String {
-        lines.into_iter().map(|line| self.write_line(line, widths) + "\n").collect()
+    fn write_lines<T: Write>(mut self, lines: Vec<Line<C>>, widths: [usize; C], mut target: T) {
+        lines.into_iter()
+            .map(|line| self.write_line(line, widths) + "\n")
+            .for_each(|line_string| { target.write(line_string.as_bytes()).unwrap(); })
     }
 
     fn write_line(&mut self, line: Line<C>, widths: [usize; C]) -> String {
@@ -184,6 +186,7 @@ impl<const C: usize> RowLines<C> {
     }
 }
 
+#[derive(Debug)]
 enum Line<const C: usize> {
     Full,
     Empty,
