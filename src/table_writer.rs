@@ -1,6 +1,7 @@
 use std::cmp::{max, min};
 use std::io::Write;
 
+use crate::string_utils::*;
 use crate::table::Width;
 
 pub struct TableWriter<const C: usize> {
@@ -19,8 +20,8 @@ impl<const C: usize> TableWriter<C> {
                     let string = &row[i];
 
                     acc[i] = match &self.column_widths[i] {
-                        Width::Dynamic => max(acc[i], n_chars(string)),
-                        Width::Max(limit) => min(max(acc[i], n_chars(string)), *limit)
+                        Width::Dynamic => max(acc[i], num_chars(string)),
+                        Width::Max(limit) => min(max(acc[i], num_chars(string)), *limit)
                     };
                 }
                 acc
@@ -36,7 +37,7 @@ impl<const C: usize> TableWriter<C> {
     fn row_to_lines(&self, row: [String; C], widths: [usize; C]) -> Vec<Line<C>> {
         let row: [String; C] = row.into_iter()
             .enumerate()
-            .map(|(i, string)| Self::adapt_string_to_width(string, widths[i]))
+            .map(|(i, string)| adapt_to_width(&string, widths[i]))
             .collect::<Vec<_>>()
             .try_into().unwrap();
 
@@ -51,56 +52,6 @@ impl<const C: usize> TableWriter<C> {
         lines.push(Line::Full);
 
         lines
-    }
-
-    fn adapt_string_to_width(string: String, width: usize) -> String {
-        if n_chars(&string) <= width { return string; }
-
-        string.lines()
-            .map(|line| Self::adapt_line_to_width(line, width))
-            .fold(String::new(), |mut result, s| {
-                result.push_str(&s);
-                result.push('\n');
-                result
-            })
-    }
-
-    fn adapt_line_to_width(line: &str, width: usize) -> String {
-        line.split(" ")
-            .filter(|word| word_not_empty(word))
-            .fold((String::new(), 0), |(mut result, mut current_line_len), word| {
-                let word_len = n_chars(word);
-
-                match word_len + current_line_len > width {
-                    true if word_len > width => {
-                        result.push('\n');
-                        result.push_str(&word[0..(width - 3)]);
-                        result.push_str("...");
-                        current_line_len = width
-                    }
-                    true => {
-                        result.push('\n');
-                        result.push_str(word);
-                        current_line_len = word_len
-                    }
-                    false if word_len + current_line_len + 1 > width => {
-                        result.push('\n');
-                        result.push_str(word);
-                        current_line_len = word_len
-                    }
-                    false => {
-                        if current_line_len > 0 {
-                            result.push(' ');
-                            current_line_len += 1;
-                        }
-
-                        result.push_str(word);
-                        current_line_len += word_len
-                    }
-                }
-
-                (result, current_line_len)
-            }).0
     }
 
     fn write_lines<T: Write>(mut self, lines: Vec<Line<C>>, widths: [usize; C], mut target: T) {
@@ -135,7 +86,7 @@ impl<const C: usize> TableWriter<C> {
             .map(|i| {
                 let width = widths[i];
                 let string = &strings[i];
-                let whitespace_len = width - n_chars(string);
+                let whitespace_len = width - num_chars(string);
                 format!(" {}{} |", string, char_n_times(' ', whitespace_len))
             })
         );
@@ -191,16 +142,4 @@ enum Line<const C: usize> {
     Full,
     Empty,
     Content([String; C]),
-}
-
-fn n_chars(string: &str) -> usize {
-    string.chars().count()
-}
-
-fn word_not_empty(word: &str) -> bool {
-    word.chars().map(|c| !c.is_whitespace()).min().unwrap_or(false)
-}
-
-fn char_n_times(c: char, len: usize) -> String {
-    vec![c; len].into_iter().collect()
 }
